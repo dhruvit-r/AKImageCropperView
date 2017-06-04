@@ -86,7 +86,7 @@ final class CropperViewController: UIViewController {
     
     @IBAction func showHideOverlayAction(_ sender: AnyObject) {
         
-        if cropView.isoverlayViewActive {
+        if cropView.isOverlayViewActive {
             
             cropView.hideOverlayView(animationDuration: 0.3)
             
@@ -133,6 +133,7 @@ final class CropperViewController: UIViewController {
         super.viewDidLoad()
         
         navigationController?.isNavigationBarHidden = true
+        cropView.ratio = (4, 3)
 
         // Programmatically initialization
         

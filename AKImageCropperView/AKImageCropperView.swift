@@ -216,7 +216,14 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
             layoutSubviews()
         }
     }
-    
+  
+    // MARK: Ratio
+    open var ratio: (width: Int, height: Int) = (1, 1) {
+      didSet{
+        overlayView?.fixedRatio(ratioX: CGFloat(ratio.width), ratioY: CGFloat(ratio.height))
+      }
+    }
+  
     // MARK: - Initializing an Image Cropper View
     
     required public init?(coder aDecoder: NSCoder) {
