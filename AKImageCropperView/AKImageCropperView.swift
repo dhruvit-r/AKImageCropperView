@@ -210,7 +210,7 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
             if newValue != nil {
                 newValue?.delegate = self
                 newValue?.cropperView = self
-                rotateView.addSubview(newValue!)
+                rotateView.insertSubview(newValue!, at: 1)
             }
             
             layoutSubviews()
@@ -261,7 +261,8 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         /* 2. Overlay view with crop rectangle */
         
         overlayView = AKImageCropperOverlayView()
-        
+        rotateView.addSubview(overlayView!)
+
         /* 3. Rotate view */
         
         addSubview(rotateView)
