@@ -133,6 +133,7 @@ final class CropperViewController: UIViewController {
         super.viewDidLoad()
         
         navigationController?.isNavigationBarHidden = true
+        cropView.ratio = (4, 3)
 
         // Programmatically initialization
         
