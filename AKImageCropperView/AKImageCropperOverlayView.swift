@@ -27,27 +27,51 @@ protocol AKImageCropperOverlayViewDelegate : class {
     func cropperOverlayViewDidChangeCropRect(_ view: AKImageCropperOverlayView, _ cropRect: CGRect)
 }
 
+public enum AKImageCropperViewAspectRatio {
+    case custom
+    case ratio(x: CGFloat, y: CGFloat)
+}
+
 open class AKImageCropperOverlayView: UIView {
     
     // MARK: -
     // MARK: ** Properties **
-
+    
     /** Configuration structure for the Overlay View appearance and behavior. */
-
+    
     open var configuration = AKImageCropperCropViewConfiguration()
     
     /** Crop rectangle */
     
     internal var cropRect: CGRect = .zero
-  
-    /// ratio: (0,0) is disabled. Default is disabled.
-    var ratioX:CGFloat = 0
-    var ratioY:CGFloat = 0
-  
+    
+    /** Aspect rectangle */
+    
+    internal var aspectRect: CGRect {
+        get {
+            switch self.aspectRatio {
+            case .custom:
+                return self.cropRect
+            case .ratio(let x, let y):
+                guard x>0 && y>0 else {
+                    NSLog("Aspect ratios must be greater than zero. Defaulting to custom aspect ratio.")
+                    return self.cropRect
+                }
+                return self.aspectFitRectInRect(CGRect(origin: .zero, size: CGSize(width: x, height: y)), rtarget: self.cropRect)
+            }
+        }
+    }
+    
+    open var aspectRatio: AKImageCropperViewAspectRatio = .custom {
+        didSet {
+            layoutSubviews()
+        }
+    }
+    
     /** Saved crop rectangle state */
     
     fileprivate var touchesBegan: (touch: CGPoint, cropRect: CGRect)!
-
+    
     /** Current active crop area part */
     
     fileprivate var activeCropAreaPart: AKCropAreaPart = .none {
@@ -67,7 +91,7 @@ open class AKImageCropperOverlayView: UIView {
         static let leftEdge             = AKCropAreaPart(rawValue: 1 << 2)
         static let bottomEdge           = AKCropAreaPart(rawValue: 1 << 3)
         static let rightEdge            = AKCropAreaPart(rawValue: 1 << 4)
-
+        
         static let all: AKCropAreaPart = [.topEdge, .rightEdge, .bottomEdge, .leftEdge]
         
         static let topLeftCorner: AKCropAreaPart        = [.topEdge, .leftEdge]
@@ -77,7 +101,7 @@ open class AKImageCropperOverlayView: UIView {
     }
     
     //  MARK: Managing the Delegate
-
+    
     weak var delegate: AKImageCropperOverlayViewDelegate?
     
     //  MARK: Touch & Parts views
@@ -112,7 +136,7 @@ open class AKImageCropperOverlayView: UIView {
     /** Parent (main) class to translate some properties and objects. */
     
     weak var cropperView: AKImageCropperView!
-
+    
     fileprivate (set) lazy var overlayView: UIView! = {
         let view = UIView()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -141,7 +165,7 @@ open class AKImageCropperOverlayView: UIView {
     }
     
     //  MARK: - Initialization
-
+    
     /**
      Returns an overlay view initialized with the specified configuration.
      
@@ -310,7 +334,7 @@ open class AKImageCropperOverlayView: UIView {
         } else {
             gridView.alpha = 0
         }
-
+        
     }
     
     //  MARK: - Life cycle
@@ -319,7 +343,7 @@ open class AKImageCropperOverlayView: UIView {
         super.layoutSubviews()
         
         overlayView.frame = frame
-        containerImageView.frame = cropRect
+        containerImageView.frame = self.aspectRect
         matchForegroundToBackgroundScrollViewOffset()
         matchForegroundToBackgroundScrollViewSize()
         
@@ -384,7 +408,7 @@ open class AKImageCropperOverlayView: UIView {
     }
     
     //  MARK: Crop rectangle parts rects
-
+    
     fileprivate var cropAreaTopLeftCornerFrame: CGRect {
         return CGRect(
             origin: CGPoint(
@@ -474,11 +498,11 @@ open class AKImageCropperOverlayView: UIView {
     // MARK: Other methods
     
     final func showOverlayBlur(_ show: Bool, completion: ((Bool) -> Void)? = nil) {
-
+        
         UIView.animate(withDuration: configuration.animation.duration, delay: 0, options: [], animations: {
-           
-                self.overlayView.subviews.first?.alpha = show ? self.configuration.overlay.blurAlpha : 0.0
-
+            
+            self.overlayView.subviews.first?.alpha = show ? self.configuration.overlay.blurAlpha : 0.0
+            
         }, completion: { isComplete in
             completion?(isComplete)
         })
@@ -487,7 +511,7 @@ open class AKImageCropperOverlayView: UIView {
     final func showGrid(_ show: Bool, completion: ((Bool) -> Void)? = nil) {
         
         if configuration.grid.alwaysShowGrid {
-             completion?(true)
+            completion?(true)
             return
         }
         
@@ -500,7 +524,7 @@ open class AKImageCropperOverlayView: UIView {
             animations()
             
         } else {
-        
+            
             UIView.animate(withDuration: configuration.animation.duration, delay: 0, options: [], animations: animations, completion: { isComplete in
                 completion?(isComplete)
             })
@@ -591,7 +615,7 @@ open class AKImageCropperOverlayView: UIView {
             color = configuration.edge.highlightedLineColor
             width = configuration.edge.highlightedLineWidth
         }
-      
+        
         view.backgroundColor = color
         view.frame = CGRect(
             x       : touchView.bounds.origin.x - configuration.cornerTouchSize.width / 2 - configuration.edge.normalLineWidth,
@@ -842,14 +866,14 @@ open class AKImageCropperOverlayView: UIView {
         /* Save */
         
         touchesBegan = (touch.location(in: self), cropRect)
-
+        
         /* Active part */
         
         activeCropAreaPart = getCropAreaPartContainsPoint(touchesBegan.touch)
     }
     
     override open func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-      
+        
         guard let touch = touches.first else { return }
         
         /* GET TRANSLATION POINT */
@@ -864,7 +888,7 @@ open class AKImageCropperOverlayView: UIView {
         let cropRectMaxFrame = cropperView.reversedFrameWithInsets
         
         if activeCropAreaPart.contains(.topEdge) {
-          
+            
             cropRect.origin.y += translationPoint.y
             cropRect.size.height -= translationPoint.y
             
@@ -881,14 +905,10 @@ open class AKImageCropperOverlayView: UIView {
                 cropRect.origin.y = cropRectMaxFrame.minY
                 cropRect.size.height = touchesBegan.cropRect.maxY - cropRectMaxFrame.minY
             }
-            
-            if(ratioX>0 && ratioY>0){
-                cropRect.size.width = cropRect.size.height * ratioX/ratioY
-            }
         }
         
         if activeCropAreaPart.contains(.rightEdge) {
-          
+            
             cropRect.size.width += translationPoint.x
             
             let pointInEdge = touchesBegan.touch.x - touchesBegan.cropRect.maxX
@@ -902,14 +922,10 @@ open class AKImageCropperOverlayView: UIView {
             if point.x < minStickPoint || cropRect.width < configuration.minCropRectSize.width {
                 cropRect.size.width = configuration.minCropRectSize.width
             }
-            
-            if(ratioX>0 && ratioY>0){
-                cropRect.size.height = cropRect.size.width * ratioY/ratioX
-            }
         }
         
         if activeCropAreaPart.contains(.bottomEdge) {
-          
+            
             cropRect.size.height += translationPoint.y
             
             let pointInEdge = touchesBegan.touch.y - touchesBegan.cropRect.maxY
@@ -923,19 +939,12 @@ open class AKImageCropperOverlayView: UIView {
             if point.y < minStickPoint || cropRect.height < configuration.minCropRectSize.height {
                 cropRect.size.height = configuration.minCropRectSize.height
             }
-            
-            if(ratioX>0 && ratioY>0){
-                cropRect.size.width = cropRect.size.height * ratioX/ratioY
-            }
         }
         
         if activeCropAreaPart.contains(.leftEdge) {
-          
+            
             cropRect.origin.x += translationPoint.x
             cropRect.size.width -= translationPoint.x
-            if(ratioX>0 && ratioY>0){
-                cropRect.size.height = cropRect.size.width * ratioY/ratioX
-            }
             
             let pointInEdge = touchesBegan.touch.x - touchesBegan.cropRect.minX
             let minStickPoint = pointInEdge + cropRectMaxFrame.minX
@@ -950,10 +959,6 @@ open class AKImageCropperOverlayView: UIView {
                 cropRect.origin.x = cropRectMaxFrame.minX
                 cropRect.size.width = touchesBegan.cropRect.maxX - cropRectMaxFrame.minX
             }
-            
-            if(ratioX>0 && ratioY>0){
-                cropRect.size.height = cropRect.size.width * ratioY/ratioX
-            }
         }
         
         /* Update UI for the crop rectange */
@@ -962,9 +967,9 @@ open class AKImageCropperOverlayView: UIView {
         
         /* Delegates */
         
-        delegate?.cropperOverlayViewDidChangeCropRect(self, cropRect)
+        delegate?.cropperOverlayViewDidChangeCropRect(self, aspectRect)
     }
-  
+    
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         
         /* Active part */
@@ -975,7 +980,7 @@ open class AKImageCropperOverlayView: UIView {
     // MARK: - Instance Method
     
     override open func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-                
+        
         guard alpha == 1 else { return cropperView.scrollView }
         
         return self.point(inside: point, with: event) && getCropAreaPartContainsPoint(point) != .none
@@ -994,21 +999,24 @@ open class AKImageCropperOverlayView: UIView {
     func matchForegroundToBackgroundScrollViewSize() {
         imageView.frame.size = cropperView.scrollView.contentSize
     }
-  
-    // MARK: - Support Ratio
-    open func fixedRatio(ratioX:CGFloat,ratioY:CGFloat){
-        self.ratioX = ratioX;
-        self.ratioY = ratioY;
-        if(ratioX>0 && ratioY>0){
-            cropRect.size.width = cropRect.size.height * ratioX/ratioY
+    
+    // MARK: - Helper
+    
+    private func scaleToAspectFitRectInRect(_ rfit: CGRect, rtarget: CGRect) -> CGFloat {
+        let s = rtarget.width / rfit.width
+        if rfit.height * s <= rtarget.height {
+            return s
         }
-        /* Update UI for the crop rectange */
-      
-        layoutSubviews()
-      
-        /* Delegates */
-      
-      delegate?.cropperOverlayViewDidChangeCropRect(self, cropRect)
+        return rtarget.height / rfit.height
     }
-  
+    
+    private func aspectFitRectInRect(_ rfit: CGRect, rtarget: CGRect) -> CGRect {
+        let s = scaleToAspectFitRectInRect(rfit, rtarget: rtarget)
+        let w = rfit.width * s
+        let h = rfit.height * s
+        let x = rtarget.midX - w / 2
+        let y = rtarget.midY - h / 2
+        return CGRect(x: x, y: y, width: w, height: h)
+    }
+    
 }
