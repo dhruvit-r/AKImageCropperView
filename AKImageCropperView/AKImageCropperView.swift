@@ -218,7 +218,8 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     }
   
     // MARK: Ratio
-    open var ratio: (width: Int, height: Int) = (1, 1) {
+    /// (0,0) is disabled. Default is disabled.
+    open var ratio: (width: Int, height: Int) = (0, 0) {
       didSet{
         overlayView?.fixedRatio(ratioX: CGFloat(ratio.width), ratioY: CGFloat(ratio.height))
       }
