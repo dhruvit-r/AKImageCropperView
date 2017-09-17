@@ -132,6 +132,8 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     
     /** The image displayed in the image cropper view. Default is nil. */
     
+    open var isUpdating: Bool = false
+    
     open var image: UIImage? {
         didSet {
             
@@ -142,8 +144,36 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
             scrollView.image = image
             overlayView?.image = image
             
-            reset()
+            if (isUpdating == false) {
+                reset()
+            }
         }
+    }
+    
+    open func updateImage(newImage: UIImage?) {
+        if (newImage == nil) {
+            return
+        }
+        
+        guard newImage != nil else {
+            return
+        }
+
+        isUpdating = true
+        
+        image = newImage
+        
+        let fitScaleMultiplier = image == nil
+                ? 1
+                : ic_CGSizeFitScaleMultiplier(image!.size, relativeToSize: reversedFrameWithInsets.size)
+            
+            
+        scrollView.maximumZoomScale = fitScaleMultiplier * 1000
+        scrollView.minimumZoomScale = fitScaleMultiplier
+        scrollView.zoomScale = fitScaleMultiplier * savedProperty.scaleAspectRatio
+        
+        isUpdating = false
+        
     }
     
     /** Cropperd image in the specified crop rectangle */
@@ -363,7 +393,7 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         if byImage {
             
             /* Zoom */
-            
+
             let fitScaleMultiplier = image == nil
                 ? 1
                 : ic_CGSizeFitScaleMultiplier(image!.size, relativeToSize: reversedFrameWithInsetsSize)
@@ -657,7 +687,7 @@ open class AKImageCropperView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         
         cancelZoomingTimer()
         
-        zoomingTimer = Timer.scheduledTimer(timeInterval: overlayView.configuration.zoomingToFitDelay, target: self, selector: #selector(zoomAction), userInfo: nil, repeats: false)
+//        zoomingTimer = Timer.scheduledTimer(timeInterval: overlayView.configuration.zoomingToFitDelay, target: self, selector: #selector(zoomAction), userInfo: nil, repeats: false)
     }
     
     @objc fileprivate func zoomAction() {

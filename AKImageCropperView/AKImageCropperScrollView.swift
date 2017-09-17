@@ -41,21 +41,23 @@ final class AKImageCropperScrollView: UIScrollView {
         return view
     }()
     
+    fileprivate var isUpdating: Bool = false
+    
     open var image: UIImage! {
         didSet {
+
+                /* Prepare scroll view to changing the image */
+                
+                maximumZoomScale = 1
+                minimumZoomScale = 1
+                zoomScale = 1
+                
+                /* Update an image view */
             
-            /* Prepare scroll view to changing the image */
+                imageView.image = image
+                imageView.frame.size = image.size
             
-            maximumZoomScale = 1
-            minimumZoomScale = 1
-            zoomScale = 1
-            
-            /* Update an image view */
-            
-            imageView.image = image
-            imageView.frame.size = image.size
-            
-            contentSize = image.size
+                contentSize = image.size
         }
     }
     

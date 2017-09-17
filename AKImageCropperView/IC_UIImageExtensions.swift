@@ -14,7 +14,7 @@ extension UIImage {
     
     func ic_imageInRect(_ rect: CGRect) -> UIImage? {
         
-        UIGraphicsBeginImageContextWithOptions(rect.size, true, 0)
+        UIGraphicsBeginImageContextWithOptions(rect.size, false, 1)
         
         // Create the bitmap context
         
