@@ -30,14 +30,14 @@ public struct AKImageCropperCropViewConfigurationEdge {
     public var isHidden: Bool = false
     
     /// Line width for normal edge state.
-    public var normalLineWidth: CGFloat = 1.0
+    public var normalLineWidth: CGFloat = 2.0
     
     /// Line width for highlighted edge state.
     public var highlightedLineWidth: CGFloat = 3.0
     
     /// Line color for normal edge state.
-    public var normalLineColor: UIColor = .white
+    public var normalLineColor: UIColor = .black
    
     /// Line color for highlighted edge state.
-    public var highlightedLineColor: UIColor = .white
+    public var highlightedLineColor: UIColor = .black
 }

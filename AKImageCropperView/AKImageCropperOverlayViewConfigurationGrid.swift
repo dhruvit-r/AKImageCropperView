@@ -44,5 +44,5 @@ public struct AKImageCropperCropViewConfigurationGrid {
     public var linesWidth: CGFloat = 1.0
    
     /// Vertical and horizontal lines color.
-    public var linesColor: UIColor = UIColor.white.withAlphaComponent(0.5)
+    public var linesColor: UIColor = UIColor.black.withAlphaComponent(0.5)
 }
